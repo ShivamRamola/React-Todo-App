@@ -215,8 +215,7 @@ If you encounter issues installing Vercel CLI:
 
 ## 📸 Screenshots
 
-<!-- Add screenshots here -->
-_Coming soon..._
+image.png
 
 ## 🎯 How It Works
 
@@ -244,17 +243,12 @@ _Coming soon..._
 
 - The anon key is safe to expose in client-side code (it's designed for this)
 - Row Level Security (RLS) policies control database access
-- For production, implement proper RLS policies based on user authentication
+
 
 ## 📝 License
 
 This project is open source and available for educational purposes.
+image.png
 
-## 🤝 Contributing
-
-This is an internship assignment project. Feel free to use it as a reference or starting point for your own projects!
-
----
-
-**Built with ❤️ using React + Supabase**
+**Built with ❤️ by Shivam**
 
