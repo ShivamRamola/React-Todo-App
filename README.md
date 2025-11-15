@@ -15,12 +15,15 @@ All data is stored and managed through Supabase, providing a real-time, scalable
 
 ## 🚀 Features
 
+- **User Authentication**: Sign up and sign in with email/password using Supabase Auth
+- **Protected Dashboard**: Secure todo management with user-specific data
 - **Full CRUD Operations**: Create, Read, Update, and Delete todos
-- **Real-time Database**: Powered by Supabase
+- **Real-time Database**: Powered by Supabase with Row Level Security (RLS)
 - **Modern UI**: Clean and responsive design with Tailwind CSS
 - **Edit Functionality**: Inline editing of todo items
 - **Error Handling**: Comprehensive error handling and loading states
 - **Optimistic Updates**: Instant UI updates for better user experience
+- **Route Protection**: React Router with protected routes
 
 ## 🛠️ Tech Stack
 
@@ -36,7 +39,9 @@ src/
   components/
     TodoItem.jsx    # Individual todo item component
     TodoList.jsx    # List of todos component
-  App.jsx           # Main app component with CRUD logic
+    SignIn.jsx      # Authentication component (sign in/sign up)
+    Dashboard.jsx   # Protected dashboard with todos
+  App.jsx           # Main app component with routing and auth state
   supabaseClient.js # Supabase client configuration
   index.css         # Global styles with Tailwind
   main.jsx          # App entry point
@@ -70,43 +75,69 @@ npm install
    - Region: (choose closest to you)
 5. Click "Create new project" and wait for it to initialize
 
-#### Step 2: Create the Todos Table
+#### Step 2: Enable Authentication
+
+1. In your Supabase dashboard, go to **Authentication** → **Providers**
+2. Make sure **Email** provider is enabled (it's enabled by default)
+3. Optionally configure email templates in **Authentication** → **Email Templates**
+
+#### Step 3: Create the Todos Table
 
 1. In your Supabase dashboard, go to **SQL Editor**
 2. Click "New Query"
-3. Run the following SQL to create the `todos` table:
+3. Run the following SQL to create the `todos` table with user authentication:
 
 ```sql
--- Create todos table
+-- Create todos table with user_id for authentication
 CREATE TABLE todos (
   id BIGSERIAL PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   is_done BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Enable Row Level Security (optional but recommended)
+-- Enable Row Level Security (RLS)
 ALTER TABLE todos ENABLE ROW LEVEL SECURITY;
 
--- Create a policy that allows all operations (for simplicity)
--- In production, you'd want more restrictive policies
-CREATE POLICY "Allow all operations on todos"
+-- Create policy: Users can only see their own todos
+CREATE POLICY "Users can view their own todos"
 ON todos
-FOR ALL
-USING (true)
-WITH CHECK (true);
+FOR SELECT
+USING (auth.uid() = user_id);
+
+-- Create policy: Users can insert their own todos
+CREATE POLICY "Users can insert their own todos"
+ON todos
+FOR INSERT
+WITH CHECK (auth.uid() = user_id);
+
+-- Create policy: Users can update their own todos
+CREATE POLICY "Users can update their own todos"
+ON todos
+FOR UPDATE
+USING (auth.uid() = user_id)
+WITH CHECK (auth.uid() = user_id);
+
+-- Create policy: Users can delete their own todos
+CREATE POLICY "Users can delete their own todos"
+ON todos
+FOR DELETE
+USING (auth.uid() = user_id);
 ```
 
 4. Click "Run" to execute the query
 
-#### Step 3: Get Your Supabase Credentials
+**Note**: The `user_id` column references `auth.users(id)`, which is automatically managed by Supabase Auth. The RLS policies ensure users can only access their own todos.
+
+#### Step 4: Get Your Supabase Credentials
 
 1. In your Supabase dashboard, go to **Settings** → **API**
 2. Copy the following:
    - **Project URL** (under "Project URL")
    - **anon/public key** (under "Project API keys" → "anon public")
 
-### 3. Configure Environment Variables
+### 4. Configure Environment Variables
 
 1. Create a `.env` file in the root directory:
 
@@ -125,7 +156,7 @@ const supabaseUrl = 'YOUR_SUPABASE_URL'
 const supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY'
 ```
 
-### 4. Run the Application
+### 5. Run the Application
 
 ```bash
 # Start the development server
@@ -221,7 +252,9 @@ image.png
 
 ### Component Architecture
 
-- **App.jsx**: Main component that manages state and handles all CRUD operations
+- **App.jsx**: Main component that manages authentication state and routing
+- **SignIn.jsx**: Handles user authentication (sign in and sign up)
+- **Dashboard.jsx**: Protected component that manages todos for authenticated users
 - **TodoList.jsx**: Displays the list of todos
 - **TodoItem.jsx**: Individual todo item with edit/delete functionality
 
@@ -234,8 +267,11 @@ image.png
 
 ### Key Concepts
 
-- **useState**: Manages component state (todos, loading, error, input)
-- **useEffect**: Fetches todos when component mounts
+- **Authentication**: Supabase Auth handles user sign up, sign in, and session management
+- **Row Level Security (RLS)**: Database policies ensure users can only access their own todos
+- **Protected Routes**: React Router redirects unauthenticated users to sign in
+- **useState**: Manages component state (todos, loading, error, input, user)
+- **useEffect**: Fetches todos when component mounts and listens for auth changes
 - **Optimistic Updates**: UI updates immediately, then syncs with database
 - **Error Handling**: Try-catch blocks with user-friendly error messages
 
