@@ -1,4 +1,4 @@
-# React + Supabase Todo App
+# React Todo App
 
 A clean, production-quality Todo application built with React, Vite, and Supabase. This app demonstrates full CRUD (Create, Read, Update, Delete) operations with a modern, responsive UI.
 
