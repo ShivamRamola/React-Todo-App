@@ -1,8 +1,13 @@
-import { useState, useEffect } from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import { supabase } from './supabaseClient'
-import SignIn from './components/SignIn'
-import Dashboard from './components/Dashboard'
+import { useState, useEffect } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { supabase } from "./supabaseClient";
+import SignIn from "./components/SignIn";
+import Dashboard from "./components/Dashboard";
 
 /**
  * Main App Component
@@ -10,10 +15,10 @@ import Dashboard from './components/Dashboard'
  */
 function App() {
   // State to store the current user
-  const [user, setUser] = useState(null)
-  
+  const [user, setUser] = useState(null);
+
   // State to manage loading while checking auth
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(true);
 
   /**
    * Check for existing session and listen for auth changes
@@ -23,42 +28,44 @@ function App() {
     // Check if there's an existing session
     const checkSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession()
-        setUser(session?.user ?? null)
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        setUser(session?.user ?? null);
       } catch (error) {
-        console.error('Error checking session:', error)
+        console.error("Error checking session:", error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    checkSession()
+    checkSession();
 
     // Listen for auth state changes (sign in, sign out, etc.)
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
 
     // Cleanup subscription on unmount
-    return () => subscription.unsubscribe()
-  }, [])
+    return () => subscription.unsubscribe();
+  }, []);
 
   /**
    * Handle successful authentication
    */
   const handleAuthSuccess = (userData) => {
-    setUser(userData)
-  }
+    setUser(userData);
+  };
 
   /**
    * Handle sign out
    */
   const handleSignOut = () => {
-    setUser(null)
-  }
+    setUser(null);
+  };
 
   // Show loading state while checking authentication
   if (loading) {
@@ -69,7 +76,7 @@ function App() {
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -112,7 +119,7 @@ function App() {
         />
       </Routes>
     </Router>
-  )
+  );
 }
 
-export default App
+export default App;

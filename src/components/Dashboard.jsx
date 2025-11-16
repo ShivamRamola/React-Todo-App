@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
-import { supabase } from '../supabaseClient'
-import TodoList from './TodoList'
+import { useState, useEffect } from "react";
+import { supabase } from "../supabaseClient";
+import TodoList from "./TodoList";
 
 /**
  * Dashboard Component
@@ -8,14 +8,14 @@ import TodoList from './TodoList'
  */
 function Dashboard({ user, onSignOut }) {
   // State to store all todos
-  const [todos, setTodos] = useState([])
-  
+  const [todos, setTodos] = useState([]);
+
   // State to manage loading and error states
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   // State for the new todo input
-  const [newTodo, setNewTodo] = useState('')
+  const [newTodo, setNewTodo] = useState("");
 
   /**
    * Fetch all todos from Supabase for the current user
@@ -23,9 +23,9 @@ function Dashboard({ user, onSignOut }) {
    */
   useEffect(() => {
     if (user) {
-      fetchTodos()
+      fetchTodos();
     }
-  }, [user])
+  }, [user]);
 
   /**
    * Fetch todos from the Supabase database
@@ -33,61 +33,63 @@ function Dashboard({ user, onSignOut }) {
    */
   const fetchTodos = async () => {
     try {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
 
       // Query the todos table, filter by user_id, order by created_at descending
       const { data, error: fetchError } = await supabase
-        .from('todos')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
+        .from("todos")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
 
-      if (fetchError) throw fetchError
+      if (fetchError) throw fetchError;
 
       // Update state with fetched todos
-      setTodos(data || [])
+      setTodos(data || []);
     } catch (err) {
-      console.error('Error fetching todos:', err)
-      setError(err.message)
+      console.error("Error fetching todos:", err);
+      setError(err.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   /**
    * Create a new todo
    * Inserts a new row into the todos table with the user's ID
    */
   const handleAddTodo = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
     // Don't add empty todos
-    if (!newTodo.trim()) return
+    if (!newTodo.trim()) return;
 
     try {
-      setError(null)
+      setError(null);
 
       // Insert new todo into Supabase with user_id
       const { data, error: insertError } = await supabase
-        .from('todos')
-        .insert([{ 
-          title: newTodo.trim(), 
-          is_done: false,
-          user_id: user.id 
-        }])
-        .select()
+        .from("todos")
+        .insert([
+          {
+            title: newTodo.trim(),
+            is_done: false,
+            user_id: user.id,
+          },
+        ])
+        .select();
 
-      if (insertError) throw insertError
+      if (insertError) throw insertError;
 
       // Add the new todo to the state (optimistic update)
-      setTodos([data[0], ...todos])
-      setNewTodo('') // Clear the input
+      setTodos([data[0], ...todos]);
+      setNewTodo(""); // Clear the input
     } catch (err) {
-      console.error('Error adding todo:', err)
-      setError(err.message)
+      console.error("Error adding todo:", err);
+      setError(err.message);
     }
-  }
+  };
 
   /**
    * Toggle the completion status of a todo
@@ -96,31 +98,29 @@ function Dashboard({ user, onSignOut }) {
   const handleToggleTodo = async (id) => {
     try {
       // Find the todo to get its current state
-      const todo = todos.find((t) => t.id === id)
-      if (!todo) return
+      const todo = todos.find((t) => t.id === id);
+      if (!todo) return;
 
       // Update the todo in Supabase
       const { error: updateError } = await supabase
-        .from('todos')
+        .from("todos")
         .update({ is_done: !todo.is_done })
-        .eq('id', id)
-        .eq('user_id', user.id) // Ensure user can only update their own todos
+        .eq("id", id)
+        .eq("user_id", user.id); // Ensure user can only update their own todos
 
-      if (updateError) throw updateError
+      if (updateError) throw updateError;
 
       // Update the local state (optimistic update)
       setTodos(
-        todos.map((t) =>
-          t.id === id ? { ...t, is_done: !t.is_done } : t
-        )
-      )
+        todos.map((t) => (t.id === id ? { ...t, is_done: !t.is_done } : t))
+      );
     } catch (err) {
-      console.error('Error toggling todo:', err)
-      setError(err.message)
+      console.error("Error toggling todo:", err);
+      setError(err.message);
       // Refetch todos to sync with database
-      fetchTodos()
+      fetchTodos();
     }
-  }
+  };
 
   /**
    * Delete a todo
@@ -130,22 +130,22 @@ function Dashboard({ user, onSignOut }) {
     try {
       // Delete from Supabase
       const { error: deleteError } = await supabase
-        .from('todos')
+        .from("todos")
         .delete()
-        .eq('id', id)
-        .eq('user_id', user.id) // Ensure user can only delete their own todos
+        .eq("id", id)
+        .eq("user_id", user.id); // Ensure user can only delete their own todos
 
-      if (deleteError) throw deleteError
+      if (deleteError) throw deleteError;
 
       // Remove from local state (optimistic update)
-      setTodos(todos.filter((t) => t.id !== id))
+      setTodos(todos.filter((t) => t.id !== id));
     } catch (err) {
-      console.error('Error deleting todo:', err)
-      setError(err.message)
+      console.error("Error deleting todo:", err);
+      setError(err.message);
       // Refetch todos to sync with database
-      fetchTodos()
+      fetchTodos();
     }
-  }
+  };
 
   /**
    * Update a todo's title
@@ -155,38 +155,36 @@ function Dashboard({ user, onSignOut }) {
     try {
       // Update in Supabase
       const { error: updateError } = await supabase
-        .from('todos')
+        .from("todos")
         .update({ title: newTitle })
-        .eq('id', id)
-        .eq('user_id', user.id) // Ensure user can only update their own todos
+        .eq("id", id)
+        .eq("user_id", user.id); // Ensure user can only update their own todos
 
-      if (updateError) throw updateError
+      if (updateError) throw updateError;
 
       // Update local state (optimistic update)
-      setTodos(
-        todos.map((t) => (t.id === id ? { ...t, title: newTitle } : t))
-      )
+      setTodos(todos.map((t) => (t.id === id ? { ...t, title: newTitle } : t)));
     } catch (err) {
-      console.error('Error updating todo:', err)
-      setError(err.message)
+      console.error("Error updating todo:", err);
+      setError(err.message);
       // Refetch todos to sync with database
-      fetchTodos()
+      fetchTodos();
     }
-  }
+  };
 
   /**
    * Handle sign out
    */
   const handleSignOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut()
-      if (error) throw error
-      onSignOut()
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      onSignOut();
     } catch (err) {
-      console.error('Error signing out:', err)
-      setError(err.message)
+      console.error("Error signing out:", err);
+      setError(err.message);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4">
@@ -198,7 +196,7 @@ function Dashboard({ user, onSignOut }) {
               📝 Todo App
             </h1>
             <p className="text-gray-600">
-              Welcome, {user.email?.split('@')[0]}!
+              Welcome, {user.email?.split("@")[0]}!
             </p>
           </div>
           <button
@@ -258,8 +256,7 @@ function Dashboard({ user, onSignOut }) {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default Dashboard
-
+export default Dashboard;
